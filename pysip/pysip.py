@@ -46,7 +46,7 @@ class Client:
         :param verify: True/False or a path to a certificate to use for verification
         """
 
-        self._api_url = 'https://{}/api'.format(sip_host)
+        self._api_url = 'https://{}/api/'.format(sip_host)
         self._auth_url = 'https://{}/auth'.format(sip_host)
         self._refresh_url = 'https://{}/refresh'.format(sip_host)
 
