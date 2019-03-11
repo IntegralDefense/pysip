@@ -1,1 +1,1 @@
-from .pysip import Client, AccessTokenExpired, RefreshTokenExpired, InvalidLogin, InvalidRequest
+from .pysip import Client, RequestError
