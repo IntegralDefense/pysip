@@ -36,9 +36,6 @@ class Client:
         """
 
         self._api_url = 'https://{}/api/'.format(sip_host)
-        self._auth_url = 'https://{}/auth'.format(sip_host)
-        self._refresh_url = 'https://{}/refresh'.format(sip_host)
-
         self._apikey = apikey
         self._verify = verify
 
@@ -58,6 +55,11 @@ class Client:
     def post(self, endpoint, data):
         """ Performs a POST request to the SIP API. """
 
+        # Clean up the given endpoint.
+        if endpoint.startswith('/'):
+            endpoint = endpoint[1:]
+        endpoint = endpoint.replace('api/', '')
+
         headers = {'Authorization': 'Apikey {}'.format(self._apikey)}
         request = requests.post(urljoin(self._api_url, endpoint), json=data, headers=headers, verify=self._verify)
         response = json.loads(request.text)
@@ -73,6 +75,11 @@ class Client:
     def get(self, endpoint):
         """ Performs a GET request to the SIP API. """
 
+        # Clean up the given endpoint.
+        if endpoint.startswith('/'):
+            endpoint = endpoint[1:]
+        endpoint = endpoint.replace('api/', '')
+
         headers = {'Authorization': 'Apikey {}'.format(self._apikey)}
         request = requests.get(urljoin(self._api_url, endpoint), headers=headers, verify=self._verify)
 
@@ -83,7 +90,7 @@ class Client:
 
         return response
 
-    def get_all(self, endpoint):
+    def get_all_pages(self, endpoint):
         """ Performs multiple GET requests to get all of the paginated results. """
 
         all_items = []
@@ -94,8 +101,7 @@ class Client:
             all_items += result['items']
             next_page = result['_links']['next']
             while next_page:
-                next_page_query = next_page.replace('/api/', '')
-                result = self.get(next_page_query)
+                result = self.get(next_page)
                 if result['items']:
                     all_items += result['items']
                 next_page = result['_links']['next']
@@ -109,6 +115,11 @@ class Client:
 
     def put(self, endpoint, data):
         """ Performs a PUT request to the SIP API. """
+
+        # Clean up the given endpoint.
+        if endpoint.startswith('/'):
+            endpoint = endpoint[1:]
+        endpoint = endpoint.replace('api/', '')
 
         headers = {'Authorization': 'Apikey {}'.format(self._apikey)}
         request = requests.put(urljoin(self._api_url, endpoint), json=data, headers=headers, verify=self._verify)
@@ -124,6 +135,11 @@ class Client:
 
     def delete(self, endpoint):
         """ Performs a DELETE request to the SIP API. """
+
+        # Clean up the given endpoint.
+        if endpoint.startswith('/'):
+            endpoint = endpoint[1:]
+        endpoint = endpoint.replace('api/', '')
 
         headers = {'Authorization': 'Apikey {}'.format(self._apikey)}
         request = requests.delete(urljoin(self._api_url, endpoint), headers=headers, verify=self._verify)
