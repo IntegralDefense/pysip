@@ -1,6 +1,8 @@
 import json
 import requests
+import socket
 
+from contextlib import closing
 from urllib.parse import urljoin
 
 
@@ -8,6 +10,13 @@ class Error(Exception):
     """ Base exception class """
 
     pass
+
+
+class ConflictError(Error):
+    """ Raised when a request returns a 409 Conflict error."""
+
+    def __init__(self, msg):
+        Error.__init__(self, msg)
 
 
 class RequestError(Error):
@@ -33,6 +42,19 @@ class Client:
         self._apikey = apikey
         self._verify = verify
 
+        # Check if the SIP host is alive.
+        if ':' in sip_host:
+            host = sip_host.split(':')[0]
+            port = int(sip_host.split(':')[1])
+        else:
+            host = sip_host
+            port = 443
+
+        with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+            sock.settimeout(2)
+            if sock.connect_ex((host, port)) != 0:
+                raise ConnectionError('Unable to connect to SIP at {}:{}'.format(host, port))
+
     def post(self, endpoint, data):
         """ Performs a POST request to the SIP API. """
 
@@ -41,7 +63,10 @@ class Client:
         response = json.loads(request.text)
 
         if not str(request.status_code).startswith('2'):
-            raise RequestError
+            if request.status_code == 409:
+                raise ConflictError(request.text)
+            else:
+                raise RequestError(request.text)
 
         return response
 
@@ -50,12 +75,37 @@ class Client:
 
         headers = {'Authorization': 'Apikey {}'.format(self._apikey)}
         request = requests.get(urljoin(self._api_url, endpoint), headers=headers, verify=self._verify)
-        response = json.loads(request.text)
 
         if not str(request.status_code).startswith('2'):
-            raise RequestError
+            raise RequestError(request.text)
+
+        response = json.loads(request.text)
 
         return response
+
+    def get_all(self, endpoint):
+        """ Performs multiple GET requests to get all of the paginated results. """
+
+        all_items = []
+
+        result = self.get(endpoint)
+
+        if 'items' in result:
+            all_items += result['items']
+            next_page = result['_links']['next']
+            while next_page:
+                next_page_query = next_page.replace('/api/', '')
+                result = self.get(next_page_query)
+                if result['items']:
+                    all_items += result['items']
+                next_page = result['_links']['next']
+        else:
+            if isinstance(result, dict):
+                all_items = [result]
+            else:
+                all_items = result
+
+        return all_items
 
     def put(self, endpoint, data):
         """ Performs a PUT request to the SIP API. """
@@ -65,7 +115,10 @@ class Client:
         response = json.loads(request.text)
 
         if not str(request.status_code).startswith('2'):
-            raise RequestError
+            if request.status_code == 409:
+                raise ConflictError(request.text)
+            else:
+                raise RequestError(request.text)
 
         return response
 
@@ -77,6 +130,9 @@ class Client:
         response = json.loads(request.text)
 
         if not str(request.status_code).startswith('2'):
-            raise RequestError
+            if request.status_code == 409:
+                raise ConflictError(request.text)
+            else:
+                raise RequestError(request.text)
 
         return response

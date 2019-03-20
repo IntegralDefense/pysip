@@ -1,1 +1,1 @@
-from .pysip import Client, RequestError
+from .pysip import Client, ConflictError, RequestError
