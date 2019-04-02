@@ -143,7 +143,7 @@ class Client:
 
         headers = {'Authorization': 'Apikey {}'.format(self._apikey)}
         request = requests.delete(urljoin(self._api_url, endpoint), headers=headers, verify=self._verify)
-        response = json.loads(request.text)
+        response = request.text
 
         if not str(request.status_code).startswith('2'):
             if request.status_code == 409:
