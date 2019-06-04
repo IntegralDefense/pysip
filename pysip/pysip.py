@@ -52,6 +52,13 @@ class Client:
             if sock.connect_ex((host, port)) != 0:
                 raise ConnectionError('Unable to connect to SIP at {}:{}'.format(host, port))
 
+    def post_file(self, endpoint, file_path):
+        """ Performs a POST request to the SIP API using the JSON contents of the file path. """
+
+        with open(file_path) as f:
+            data = json.load(f)
+        self.post(endpoint, data)
+
     def post(self, endpoint, data):
         """ Performs a POST request to the SIP API. """
 
@@ -62,7 +69,10 @@ class Client:
 
         headers = {'Authorization': 'Apikey {}'.format(self._apikey)}
         request = requests.post(urljoin(self._api_url, endpoint), json=data, headers=headers, verify=self._verify)
-        response = json.loads(request.text)
+        if request.status_code == 204:
+            response = ''
+        else:
+            response = json.loads(request.text)
 
         if not str(request.status_code).startswith('2'):
             if request.status_code == 409:
