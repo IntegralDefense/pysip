@@ -52,6 +52,13 @@ class Client:
             if sock.connect_ex((host, port)) != 0:
                 raise ConnectionError('Unable to connect to SIP at {}:{}'.format(host, port))
 
+    def post_file(self, endpoint, file_path):
+        """ Performs a POST request to the SIP API using the JSON contents of the file path. """
+
+        with open(file_path) as f:
+            data = json.load(f)
+        self.post(endpoint, data)
+
     def post(self, endpoint, data):
         """ Performs a POST request to the SIP API. """
 
