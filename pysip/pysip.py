@@ -62,7 +62,10 @@ class Client:
 
         headers = {'Authorization': 'Apikey {}'.format(self._apikey)}
         request = requests.post(urljoin(self._api_url, endpoint), json=data, headers=headers, verify=self._verify)
-        response = json.loads(request.text)
+        if request.status_code == 204:
+            response = ''
+        else:
+            response = json.loads(request.text)
 
         if not str(request.status_code).startswith('2'):
             if request.status_code == 409:
